@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { ArrowLeft, Star, Clock, MapPin, Phone } from 'lucide-react';
+import { ArrowLeft, Star, Clock, MapPin, Phone, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ProductCard } from '@/components/ProductCard';
 import { Shop } from '@/types';
-import { shopProducts } from '@/data/mockData';
+import { useShopWithProducts } from '@/hooks/useShops';
 import { cn } from '@/lib/utils';
 
 interface ShopDetailProps {
@@ -21,10 +21,14 @@ const categories = [
   { id: 'leafy' as Category, label: 'Leafy' },
 ];
 
-export const ShopDetail = ({ shop, onBack, className }: ShopDetailProps) => {
+export const ShopDetail = ({ shop: initialShop, onBack, className }: ShopDetailProps) => {
   const [selectedCategory, setSelectedCategory] = useState<Category>('all');
   
-  const products = shopProducts.filter(sp => sp.shopId === shop.id);
+  const { data, isLoading } = useShopWithProducts(initialShop.id);
+  
+  const shop = data?.shop ?? initialShop;
+  const products = data?.products ?? [];
+  
   const filteredProducts = selectedCategory === 'all'
     ? products
     : products.filter(sp => sp.product.category === selectedCategory);
@@ -119,13 +123,20 @@ export const ShopDetail = ({ shop, onBack, className }: ShopDetailProps) => {
         <h2 className="font-semibold text-foreground mb-4">
           Available Products ({filteredProducts.length})
         </h2>
-        <div className="grid grid-cols-2 gap-3">
-          {filteredProducts.map((sp) => (
-            <ProductCard key={sp.id} shopProduct={sp} shop={shop} />
-          ))}
-        </div>
+        
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            {filteredProducts.map((sp) => (
+              <ProductCard key={sp.id} shopProduct={sp} shop={shop} />
+            ))}
+          </div>
+        )}
 
-        {filteredProducts.length === 0 && (
+        {!isLoading && filteredProducts.length === 0 && (
           <div className="text-center py-12">
             <p className="text-muted-foreground">No products in this category</p>
           </div>

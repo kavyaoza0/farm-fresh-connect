@@ -6,8 +6,8 @@ import { ShopCard } from '@/components/ShopCard';
 import { ShopDetail } from '@/components/ShopDetail';
 import { CartDrawer } from '@/components/CartDrawer';
 import { Shop } from '@/types';
-import { shops } from '@/data/mockData';
-import { Apple, Carrot, Leaf, Sparkles } from 'lucide-react';
+import { useShops } from '@/hooks/useShops';
+import { Apple, Carrot, Leaf, Sparkles, Loader2 } from 'lucide-react';
 
 const categories = [
   { id: 'all', label: 'All', icon: Sparkles },
@@ -22,6 +22,8 @@ export const CustomerHome = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedShop, setSelectedShop] = useState<Shop | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
+
+  const { data: shops = [], isLoading, error } = useShops();
 
   const filteredShops = shops.filter(shop => 
     shop.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -120,19 +122,34 @@ export const CustomerHome = () => {
             </button>
           </div>
 
-          <div className="space-y-4">
-            {filteredShops.map((shop) => (
-              <ShopCard
-                key={shop.id}
-                shop={shop}
-                onClick={() => setSelectedShop(shop)}
-              />
-            ))}
-          </div>
-
-          {filteredShops.length === 0 && (
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          ) : error ? (
             <div className="text-center py-12">
-              <p className="text-muted-foreground">No shops found matching your search</p>
+              <p className="text-destructive">Error loading shops. Please try again.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {filteredShops.map((shop) => (
+                <ShopCard
+                  key={shop.id}
+                  shop={shop}
+                  onClick={() => setSelectedShop(shop)}
+                />
+              ))}
+            </div>
+          )}
+
+          {!isLoading && !error && filteredShops.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">
+                {shops.length === 0 
+                  ? 'No shops available yet. Check back soon!'
+                  : 'No shops found matching your search'
+                }
+              </p>
             </div>
           )}
         </section>

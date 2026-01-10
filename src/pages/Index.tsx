@@ -1,12 +1,21 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { RoleSelector } from '@/components/RoleSelector';
 import { CustomerHome } from '@/pages/CustomerHome';
 import { Button } from '@/components/ui/button';
 import { UserRole } from '@/types';
-import { Sprout, ArrowRight, Store, Users, Truck } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { Sprout, Store, Users, Truck, LogIn, LogOut } from 'lucide-react';
 
 const Index = () => {
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
+  const { user, userRole, signOut, loading } = useAuth();
+  const navigate = useNavigate();
+
+  // If user is logged in and has a role, show the appropriate dashboard
+  if (user && userRole && !selectedRole) {
+    setSelectedRole(userRole);
+  }
 
   // Render customer home if customer is selected
   if (selectedRole === 'customer') {
@@ -46,9 +55,17 @@ const Index = () => {
         <p className="text-sm text-muted-foreground mb-8 text-center">
           This feature is coming soon! We're building it step by step.
         </p>
-        <Button variant="outline" onClick={() => setSelectedRole(null)}>
-          ← Back to Home
-        </Button>
+        <div className="flex gap-3">
+          <Button variant="outline" onClick={() => setSelectedRole(null)}>
+            ← Back to Home
+          </Button>
+          {user && (
+            <Button variant="ghost" onClick={() => signOut()}>
+              <LogOut className="w-4 h-4 mr-2" />
+              Sign Out
+            </Button>
+          )}
+        </div>
       </div>
     );
   }
@@ -58,6 +75,21 @@ const Index = () => {
     <div className="min-h-screen gradient-fresh">
       {/* Hero Section */}
       <div className="container max-w-lg mx-auto px-4 pt-12 pb-8">
+        {/* Header with Auth */}
+        <div className="flex justify-end mb-4">
+          {loading ? null : user ? (
+            <Button variant="ghost" size="sm" onClick={() => signOut()}>
+              <LogOut className="w-4 h-4 mr-2" />
+              Sign Out
+            </Button>
+          ) : (
+            <Button variant="ghost" size="sm" onClick={() => navigate('/auth')}>
+              <LogIn className="w-4 h-4 mr-2" />
+              Sign In
+            </Button>
+          )}
+        </div>
+
         {/* Logo */}
         <div className="flex items-center justify-center gap-3 mb-8">
           <div className="w-14 h-14 gradient-hero rounded-2xl flex items-center justify-center shadow-elevated">
@@ -103,7 +135,14 @@ const Index = () => {
           <h3 className="text-center font-semibold text-foreground mb-4">
             I am a...
           </h3>
-          <RoleSelector onRoleSelect={setSelectedRole} />
+          <RoleSelector onRoleSelect={(role) => {
+            if (!user) {
+              // Redirect to auth if not logged in
+              navigate('/auth');
+            } else {
+              setSelectedRole(role);
+            }
+          }} />
         </div>
 
         {/* Features */}
