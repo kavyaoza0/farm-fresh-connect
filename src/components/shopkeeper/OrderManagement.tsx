@@ -214,10 +214,6 @@ function OrderDetails({
   onStatusChange: (status: Order['status']) => void;
   isUpdating: boolean;
 }) {
-  order: Order;
-  onStatusChange: (status: string) => void;
-  isUpdating: boolean;
-}) {
   const status = statusConfig[order.status];
 
   const getNextStatus = () => {
