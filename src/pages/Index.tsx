@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { RoleSelector } from '@/components/RoleSelector';
 import { CustomerHome } from '@/pages/CustomerHome';
+import { ShopkeeperDashboard } from '@/pages/ShopkeeperDashboard';
 import { Button } from '@/components/ui/button';
 import { UserRole } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
@@ -20,6 +21,11 @@ const Index = () => {
   // Render customer home if customer is selected
   if (selectedRole === 'customer') {
     return <CustomerHome />;
+  }
+
+  // Render shopkeeper dashboard
+  if (selectedRole === 'shopkeeper') {
+    return <ShopkeeperDashboard />;
   }
 
   // Render role-specific placeholders
