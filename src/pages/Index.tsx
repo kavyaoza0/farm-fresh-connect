@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { RoleSelector } from '@/components/RoleSelector';
 import { CustomerHome } from '@/pages/CustomerHome';
 import { ShopkeeperDashboard } from '@/pages/ShopkeeperDashboard';
+import FarmerDashboard from '@/pages/FarmerDashboard';
 import { Button } from '@/components/ui/button';
 import { UserRole } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
@@ -26,6 +27,11 @@ const Index = () => {
   // Render shopkeeper dashboard
   if (selectedRole === 'shopkeeper') {
     return <ShopkeeperDashboard />;
+  }
+
+  // Render farmer dashboard
+  if (selectedRole === 'farmer') {
+    return <FarmerDashboard />;
   }
 
   // Render role-specific placeholders
