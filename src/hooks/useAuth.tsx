@@ -23,30 +23,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
 
-        // Defer role fetching to avoid deadlock
-        if (session?.user) {
-          setTimeout(() => {
-            fetchUserRole(session.user.id);
-          }, 0);
-        } else {
-          setUserRole(null);
-        }
+      // Always reset role on auth transitions to avoid stale role state
+      setUserRole(null);
+
+      // Defer role fetching to avoid deadlock
+      if (session?.user) {
+        setTimeout(() => {
+          fetchUserRole(session.user.id);
+        }, 0);
       }
-    );
+    });
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+
+      // Always reset role before refetch
+      setUserRole(null);
+
       if (session?.user) {
         fetchUserRole(session.user.id);
       }
+
       setLoading(false);
     });
 
@@ -57,20 +63,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { data, error } = await supabase
         .from('user_roles')
-        .select('role')
+        .select('role, created_at')
         .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(1)
         .maybeSingle();
-      
+
       if (error) {
         console.error('Error fetching user role:', error);
+        setUserRole(null);
         return;
       }
-      
-      if (data) {
-        setUserRole(data.role as UserRole);
-      }
+
+      setUserRole((data?.role as UserRole) ?? null);
     } catch (err) {
       console.error('Error in fetchUserRole:', err);
+      setUserRole(null);
     }
   };
 

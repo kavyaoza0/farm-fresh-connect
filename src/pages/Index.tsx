@@ -107,9 +107,9 @@ const Index = () => {
           <h3 className="text-center font-semibold text-foreground mb-4">
             I am a...
           </h3>
-          <RoleSelector onRoleSelect={() => {
-            // Redirect to auth - user will be redirected to dashboard after login based on their role
-            navigate('/auth');
+          <RoleSelector onRoleSelect={(role) => {
+            // Preselect role on the auth page (used for sign up)
+            navigate(`/auth?role=${role}`);
           }} />
         </div>
 
