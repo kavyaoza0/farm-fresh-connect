@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,6 +14,9 @@ const emailSchema = z.string().email('Please enter a valid email address');
 const passwordSchema = z.string().min(6, 'Password must be at least 6 characters');
 const nameSchema = z.string().min(2, 'Name must be at least 2 characters');
 
+const isPublicRole = (value: string | null): value is Exclude<UserRole, 'admin'> =>
+  value === 'customer' || value === 'shopkeeper' || value === 'farmer';
+
 export default function Auth() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
@@ -23,16 +26,25 @@ export default function Auth() {
   const [step, setStep] = useState<'credentials' | 'role'>('credentials');
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string; name?: string }>({});
-  
+
   const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
 
   useEffect(() => {
     if (user) {
       navigate('/');
+      return;
     }
-  }, [user, navigate]);
+
+    // If user picked a role on the landing page, preselect it for sign up
+    const roleFromQuery = new URLSearchParams(location.search).get('role');
+    if (isPublicRole(roleFromQuery)) {
+      setSelectedRole(roleFromQuery);
+      setIsSignUp(true);
+    }
+  }, [user, navigate, location.search]);
 
   const validateForm = () => {
     const newErrors: { email?: string; password?: string; name?: string } = {};
@@ -60,11 +72,16 @@ export default function Auth() {
 
   const handleCredentialsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
     if (isSignUp) {
-      setStep('role');
+      // If the user preselected a role (e.g. from landing page), skip the role step
+      if (selectedRole) {
+        await handleRoleSelect(selectedRole);
+      } else {
+        setStep('role');
+      }
     } else {
       await handleSignIn();
     }

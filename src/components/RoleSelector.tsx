@@ -1,6 +1,5 @@
-import { Button } from '@/components/ui/button';
 import { UserRole } from '@/types';
-import { Sprout, Store, Users, ShieldCheck } from 'lucide-react';
+import { Sprout, Store, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface RoleSelectorProps {
@@ -33,14 +32,6 @@ const roles = [
     icon: Sprout,
     color: 'farmer',
   },
-  {
-    id: 'admin' as UserRole,
-    title: 'Admin',
-    titleHindi: 'प्रशासक',
-    description: 'Manage the marketplace',
-    icon: ShieldCheck,
-    color: 'primary',
-  },
 ];
 
 export const RoleSelector = ({ onRoleSelect, className }: RoleSelectorProps) => {
@@ -57,8 +48,7 @@ export const RoleSelector = ({ onRoleSelect, className }: RoleSelectorProps) => 
               "group relative flex flex-col items-center p-6 bg-card rounded-2xl shadow-card hover:shadow-elevated transition-all duration-300 border-2 border-transparent animate-fade-in",
               role.id === 'customer' && "hover:border-customer",
               role.id === 'shopkeeper' && "hover:border-shopkeeper",
-              role.id === 'farmer' && "hover:border-farmer",
-              role.id === 'admin' && "hover:border-primary"
+              role.id === 'farmer' && "hover:border-farmer"
             )}
             style={{ animationDelay: `${roles.indexOf(role) * 100}ms` }}
           >
@@ -66,8 +56,7 @@ export const RoleSelector = ({ onRoleSelect, className }: RoleSelectorProps) => 
               "w-16 h-16 rounded-2xl flex items-center justify-center mb-4 transition-all duration-300 group-hover:scale-110",
               role.id === 'customer' && "bg-customer/10 text-customer",
               role.id === 'shopkeeper' && "bg-shopkeeper/10 text-shopkeeper",
-              role.id === 'farmer' && "bg-farmer/10 text-farmer",
-              role.id === 'admin' && "bg-primary/10 text-primary"
+              role.id === 'farmer' && "bg-farmer/10 text-farmer"
             )}>
               <Icon className="w-8 h-8" />
             </div>
