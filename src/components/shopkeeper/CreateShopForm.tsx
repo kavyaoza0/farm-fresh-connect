@@ -34,7 +34,10 @@ export function CreateShopForm() {
       <div className="container max-w-lg mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/')}>
+          <Button variant="ghost" size="sm" onClick={async () => {
+            await signOut();
+            navigate('/');
+          }}>
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
           </Button>

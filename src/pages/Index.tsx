@@ -1,83 +1,45 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { RoleSelector } from '@/components/RoleSelector';
 import { CustomerHome } from '@/pages/CustomerHome';
 import { ShopkeeperDashboard } from '@/pages/ShopkeeperDashboard';
 import FarmerDashboard from '@/pages/FarmerDashboard';
 import { Button } from '@/components/ui/button';
-import { UserRole } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
-import { Sprout, Store, Users, Truck, LogIn, LogOut } from 'lucide-react';
+import { Sprout, Users, LogIn, LogOut } from 'lucide-react';
 
 const Index = () => {
-  const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
   const { user, userRole, signOut, loading } = useAuth();
   const navigate = useNavigate();
 
-  // If user is logged in and has a role, show the appropriate dashboard
-  if (user && userRole && !selectedRole) {
-    setSelectedRole(userRole);
+  // If user is logged in and has a role, render the appropriate dashboard directly
+  if (user && userRole) {
+    if (userRole === 'customer') {
+      return <CustomerHome />;
+    }
+    if (userRole === 'shopkeeper') {
+      return <ShopkeeperDashboard />;
+    }
+    if (userRole === 'farmer') {
+      return <FarmerDashboard />;
+    }
   }
 
-  // Render customer home if customer is selected
-  if (selectedRole === 'customer') {
-    return <CustomerHome />;
-  }
-
-  // Render shopkeeper dashboard
-  if (selectedRole === 'shopkeeper') {
-    return <ShopkeeperDashboard />;
-  }
-
-  // Render farmer dashboard
-  if (selectedRole === 'farmer') {
-    return <FarmerDashboard />;
-  }
-
-  // Render role-specific placeholders
-  if (selectedRole) {
-    const roleConfig = {
-      shopkeeper: {
-        title: 'Shopkeeper Dashboard',
-        icon: Store,
-        color: 'bg-shopkeeper/10 text-shopkeeper',
-        description: 'Manage your shop, products, and orders',
-      },
-      farmer: {
-        title: 'Farmer Dashboard',
-        icon: Truck,
-        color: 'bg-farmer/10 text-farmer',
-        description: 'List your produce and connect with shopkeepers',
-      },
-      admin: {
-        title: 'Admin Panel',
-        icon: Users,
-        color: 'bg-primary/10 text-primary',
-        description: 'Manage users, verify accounts, and view analytics',
-      },
-    }[selectedRole];
-
+  // Admin placeholder (since we don't have an admin dashboard yet)
+  if (user && userRole === 'admin') {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
-        <div className={`w-20 h-20 ${roleConfig?.color} rounded-2xl flex items-center justify-center mb-6`}>
-          {roleConfig?.icon && <roleConfig.icon className="w-10 h-10" />}
+        <div className="w-20 h-20 bg-primary/10 text-primary rounded-2xl flex items-center justify-center mb-6">
+          <Users className="w-10 h-10" />
         </div>
-        <h1 className="text-2xl font-bold text-foreground mb-2">{roleConfig?.title}</h1>
-        <p className="text-muted-foreground text-center mb-6">{roleConfig?.description}</p>
+        <h1 className="text-2xl font-bold text-foreground mb-2">Admin Panel</h1>
+        <p className="text-muted-foreground text-center mb-6">Manage users, verify accounts, and view analytics</p>
         <p className="text-sm text-muted-foreground mb-8 text-center">
           This feature is coming soon! We're building it step by step.
         </p>
-        <div className="flex gap-3">
-          <Button variant="outline" onClick={() => setSelectedRole(null)}>
-            ← Back to Home
-          </Button>
-          {user && (
-            <Button variant="ghost" onClick={() => signOut()}>
-              <LogOut className="w-4 h-4 mr-2" />
-              Sign Out
-            </Button>
-          )}
-        </div>
+        <Button variant="ghost" onClick={() => signOut()}>
+          <LogOut className="w-4 h-4 mr-2" />
+          Sign Out
+        </Button>
       </div>
     );
   }
@@ -147,13 +109,9 @@ const Index = () => {
           <h3 className="text-center font-semibold text-foreground mb-4">
             I am a...
           </h3>
-          <RoleSelector onRoleSelect={(role) => {
-            if (!user) {
-              // Redirect to auth if not logged in
-              navigate('/auth');
-            } else {
-              setSelectedRole(role);
-            }
+          <RoleSelector onRoleSelect={() => {
+            // Redirect to auth - user will be redirected to dashboard after login based on their role
+            navigate('/auth');
           }} />
         </div>
 
