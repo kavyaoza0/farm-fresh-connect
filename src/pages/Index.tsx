@@ -13,35 +13,33 @@ const Index = () => {
 
   // If user is logged in and has a role, render the appropriate dashboard directly
   if (user && userRole) {
-    if (userRole === 'customer') {
-      return <CustomerHome />;
+    switch (userRole) {
+      case 'customer':
+        return <CustomerHome />;
+      case 'shopkeeper':
+        return <ShopkeeperDashboard />;
+      case 'farmer':
+        return <FarmerDashboard />;
+      case 'admin':
+        return (
+          <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
+            <div className="w-20 h-20 bg-primary/10 text-primary rounded-2xl flex items-center justify-center mb-6">
+              <Users className="w-10 h-10" />
+            </div>
+            <h1 className="text-2xl font-bold text-foreground mb-2">Admin Panel</h1>
+            <p className="text-muted-foreground text-center mb-6">Manage users, verify accounts, and view analytics</p>
+            <p className="text-sm text-muted-foreground mb-8 text-center">
+              This feature is coming soon! We're building it step by step.
+            </p>
+            <Button variant="ghost" onClick={() => signOut()}>
+              <LogOut className="w-4 h-4 mr-2" />
+              Sign Out
+            </Button>
+          </div>
+        );
+      default:
+        break;
     }
-    if (userRole === 'shopkeeper') {
-      return <ShopkeeperDashboard />;
-    }
-    if (userRole === 'farmer') {
-      return <FarmerDashboard />;
-    }
-  }
-
-  // Admin placeholder (since we don't have an admin dashboard yet)
-  if (user && userRole === 'admin') {
-    return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
-        <div className="w-20 h-20 bg-primary/10 text-primary rounded-2xl flex items-center justify-center mb-6">
-          <Users className="w-10 h-10" />
-        </div>
-        <h1 className="text-2xl font-bold text-foreground mb-2">Admin Panel</h1>
-        <p className="text-muted-foreground text-center mb-6">Manage users, verify accounts, and view analytics</p>
-        <p className="text-sm text-muted-foreground mb-8 text-center">
-          This feature is coming soon! We're building it step by step.
-        </p>
-        <Button variant="ghost" onClick={() => signOut()}>
-          <LogOut className="w-4 h-4 mr-2" />
-          Sign Out
-        </Button>
-      </div>
-    );
   }
 
   // Landing page with role selection
