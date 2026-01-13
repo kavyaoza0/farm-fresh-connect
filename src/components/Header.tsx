@@ -1,14 +1,15 @@
-import { ShoppingCart, MapPin, User } from 'lucide-react';
+import { ShoppingCart, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/CartContext';
 import { cn } from '@/lib/utils';
+import { HamburgerMenu } from '@/components/HamburgerMenu';
 
 interface HeaderProps {
   title?: string;
   showLocation?: boolean;
   showCart?: boolean;
+  showMenu?: boolean;
   onCartClick?: () => void;
-  onProfileClick?: () => void;
   className?: string;
 }
 
@@ -16,8 +17,8 @@ export const Header = ({
   title = "Mandi Fresh",
   showLocation = true,
   showCart = true,
+  showMenu = true,
   onCartClick,
-  onProfileClick,
   className,
 }: HeaderProps) => {
   const { itemCount, total } = useCart();
@@ -57,13 +58,7 @@ export const Header = ({
                 )}
               </Button>
             )}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onProfileClick}
-            >
-              <User className="w-5 h-5" />
-            </Button>
+            {showMenu && <HamburgerMenu />}
           </div>
         </div>
       </div>
