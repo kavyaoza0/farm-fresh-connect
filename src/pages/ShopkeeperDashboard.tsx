@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useAuth } from '@/hooks/useAuth';
 import { useMyShop, useMyShopProducts, useShopOrders } from '@/hooks/useShopkeeper';
 import { Header } from '@/components/Header';
 import { BottomNav } from '@/components/BottomNav';
@@ -13,7 +12,6 @@ type TabType = 'overview' | 'products' | 'orders';
 
 export function ShopkeeperDashboard() {
   const [activeTab, setActiveTab] = useState<TabType>('overview');
-  const { signOut } = useAuth();
   const { data: shop, isLoading: shopLoading } = useMyShop();
   const { data: products = [], isLoading: productsLoading } = useMyShopProducts(shop?.id);
   const { data: orders = [], isLoading: ordersLoading } = useShopOrders(shop?.id);
@@ -26,7 +24,7 @@ export function ShopkeeperDashboard() {
   if (shopLoading) {
     return (
       <div className="min-h-screen bg-background">
-        <Header title="My Shop" onProfileClick={signOut} />
+        <Header title="My Shop" showCart={false} />
         <div className="p-4 space-y-4">
           <Skeleton className="h-32 w-full rounded-xl" />
           <Skeleton className="h-20 w-full rounded-xl" />
@@ -45,7 +43,6 @@ export function ShopkeeperDashboard() {
     <div className="min-h-screen bg-background pb-20">
       <Header 
         title={shop.name} 
-        onProfileClick={signOut}
         showLocation={false}
         showCart={false}
       />
