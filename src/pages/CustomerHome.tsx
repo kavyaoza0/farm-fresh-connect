@@ -5,9 +5,13 @@ import { SearchBar } from '@/components/SearchBar';
 import { ShopCard } from '@/components/ShopCard';
 import { ShopDetail } from '@/components/ShopDetail';
 import { CartDrawer } from '@/components/CartDrawer';
+import { LocationSelector } from '@/components/LocationSelector';
+import { ShopMap } from '@/components/ShopMap';
 import { Shop } from '@/types';
-import { useShops } from '@/hooks/useShops';
-import { Apple, Carrot, Leaf, Sparkles, Loader2 } from 'lucide-react';
+import { useShops, ShopWithDistance } from '@/hooks/useShops';
+import { useLocation } from '@/context/LocationContext';
+import { Apple, Carrot, Leaf, Sparkles, Loader2, Map, List, MapPin } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const categories = [
   { id: 'all', label: 'All', icon: Sparkles },
@@ -22,7 +26,9 @@ export const CustomerHome = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedShop, setSelectedShop] = useState<Shop | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
 
+  const { userLocation, isLocationSet, setShowLocationSelector } = useLocation();
   const { data: shops = [], isLoading, error } = useShops();
 
   const filteredShops = shops.filter(shop => 
@@ -61,6 +67,7 @@ export const CustomerHome = () => {
   return (
     <div className="min-h-screen bg-background pb-24">
       <Header onCartClick={() => setIsCartOpen(true)} />
+      <LocationSelector shops={shops} />
       
       {/* Main Content */}
       <main className="container max-w-lg mx-auto px-4 py-4">
@@ -72,7 +79,7 @@ export const CustomerHome = () => {
           </p>
           <div className="flex gap-3">
             <div className="bg-primary-foreground/20 backdrop-blur-sm rounded-lg px-4 py-2 text-center">
-              <p className="text-2xl font-bold">{shops.length}</p>
+              <p className="text-2xl font-bold">{filteredShops.length}</p>
               <p className="text-xs opacity-80">Nearby Shops</p>
             </div>
             <div className="bg-primary-foreground/20 backdrop-blur-sm rounded-lg px-4 py-2 text-center">
@@ -82,12 +89,57 @@ export const CustomerHome = () => {
           </div>
         </div>
 
-        {/* Search */}
-        <SearchBar
-          value={searchQuery}
-          onChange={setSearchQuery}
-          className="mb-4"
-        />
+        {/* Location Prompt if not set */}
+        {!isLocationSet && (
+          <div 
+            className="bg-muted rounded-xl p-4 mb-4 flex items-center justify-between cursor-pointer hover:bg-muted/80 transition-colors"
+            onClick={() => setShowLocationSelector(true)}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <MapPin className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <p className="font-medium text-foreground">Set your location</p>
+                <p className="text-sm text-muted-foreground">Find shops near you</p>
+              </div>
+            </div>
+            <Button size="sm" variant="default">
+              Set Location
+            </Button>
+          </div>
+        )}
+
+        {/* Search & View Toggle */}
+        <div className="flex gap-2 mb-4">
+          <SearchBar
+            value={searchQuery}
+            onChange={setSearchQuery}
+            className="flex-1"
+          />
+          <div className="flex bg-muted rounded-xl p-1">
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-2 rounded-lg transition-colors ${
+                viewMode === 'list' 
+                  ? 'bg-background shadow-sm text-foreground' 
+                  : 'text-muted-foreground'
+              }`}
+            >
+              <List className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => setViewMode('map')}
+              className={`p-2 rounded-lg transition-colors ${
+                viewMode === 'map' 
+                  ? 'bg-background shadow-sm text-foreground' 
+                  : 'text-muted-foreground'
+              }`}
+            >
+              <Map className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
 
         {/* Categories */}
         <div className="flex gap-3 overflow-x-auto pb-2 mb-6 scrollbar-hide">
@@ -111,15 +163,31 @@ export const CustomerHome = () => {
           })}
         </div>
 
+        {/* Map View */}
+        {viewMode === 'map' && (
+          <div className="h-64 rounded-xl overflow-hidden mb-6 border">
+            <ShopMap
+              shops={filteredShops}
+              userLocation={userLocation}
+              onShopSelect={(shop) => setSelectedShop(shop)}
+            />
+          </div>
+        )}
+
         {/* Shops List */}
         <section>
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-foreground text-lg">
-              Nearby Shops
+              {isLocationSet ? 'Shops Near You' : 'All Shops'}
             </h3>
-            <button className="text-sm text-primary font-medium">
-              See all
-            </button>
+            {isLocationSet && (
+              <button 
+                className="text-sm text-primary font-medium"
+                onClick={() => setShowLocationSelector(true)}
+              >
+                Change Location
+              </button>
+            )}
           </div>
 
           {isLoading ? (
@@ -133,7 +201,7 @@ export const CustomerHome = () => {
           ) : (
             <div className="space-y-4">
               {filteredShops.map((shop) => (
-                <ShopCard
+                <ShopCardWithDistance
                   key={shop.id}
                   shop={shop}
                   onClick={() => setSelectedShop(shop)}
@@ -164,6 +232,29 @@ export const CustomerHome = () => {
           setIsCartOpen(false);
         }}
       />
+    </div>
+  );
+};
+
+// Extended ShopCard with distance display
+const ShopCardWithDistance = ({ 
+  shop, 
+  onClick 
+}: { 
+  shop: ShopWithDistance; 
+  onClick: () => void;
+}) => {
+  return (
+    <div className="relative">
+      <ShopCard shop={shop} onClick={onClick} />
+      {shop.distance !== undefined && (
+        <div className="absolute top-3 right-3 bg-background/90 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-medium text-muted-foreground">
+          {shop.distance < 1 
+            ? `${Math.round(shop.distance * 1000)}m away`
+            : `${shop.distance.toFixed(1)} km away`
+          }
+        </div>
+      )}
     </div>
   );
 };
