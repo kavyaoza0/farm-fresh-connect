@@ -1,8 +1,9 @@
-import { ShoppingCart, MapPin } from 'lucide-react';
+import { ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/CartContext';
 import { cn } from '@/lib/utils';
 import { HamburgerMenu } from '@/components/HamburgerMenu';
+import { LocationBadge } from '@/components/LocationBadge';
 
 interface HeaderProps {
   title?: string;
@@ -21,7 +22,7 @@ export const Header = ({
   onCartClick,
   className,
 }: HeaderProps) => {
-  const { itemCount, total } = useCart();
+  const { itemCount } = useCart();
 
   return (
     <header className={cn(
@@ -34,10 +35,7 @@ export const Header = ({
           <div className="flex-1">
             <h1 className="text-xl font-bold text-primary">{title}</h1>
             {showLocation && (
-              <button className="flex items-center gap-1 text-sm text-muted-foreground mt-0.5 hover:text-foreground transition-colors">
-                <MapPin className="w-3.5 h-3.5" />
-                <span className="truncate max-w-[180px]">New Delhi, 110001</span>
-              </button>
+              <LocationBadge className="mt-1" />
             )}
           </div>
 

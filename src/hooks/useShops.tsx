@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Shop, ShopProduct, Product, Location } from '@/types';
+import { useLocation as useLocationContext } from '@/context/LocationContext';
 
 interface DbShop {
   id: string;
@@ -91,10 +92,36 @@ const mapDbShopProductToShopProduct = (dbShopProduct: DbShopProduct): ShopProduc
   isAvailable: dbShopProduct.is_available ?? true,
 });
 
-export const useShops = () => {
+// Calculate distance between two points using Haversine formula
+export const calculateDistance = (
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+): number => {
+  const R = 6371; // Earth's radius in kilometers
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) *
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+};
+
+export interface ShopWithDistance extends Shop {
+  distance?: number;
+}
+
+export const useShops = (maxDistance?: number) => {
+  const { userLocation } = useLocationContext();
+
   return useQuery({
-    queryKey: ['shops'],
-    queryFn: async (): Promise<Shop[]> => {
+    queryKey: ['shops', userLocation?.latitude, userLocation?.longitude, maxDistance],
+    queryFn: async (): Promise<ShopWithDistance[]> => {
       const { data: shopsData, error: shopsError } = await supabase
         .from('shops')
         .select('*')
@@ -102,9 +129,30 @@ export const useShops = () => {
 
       if (shopsError) throw shopsError;
 
-      const shops: Shop[] = (shopsData ?? []).map((shop) => 
+      let shops: ShopWithDistance[] = (shopsData ?? []).map((shop) => 
         mapDbShopToShop(shop as DbShop)
       );
+
+      // Calculate distance and filter if user location is set
+      if (userLocation) {
+        shops = shops.map(shop => {
+          const distance = calculateDistance(
+            userLocation.latitude,
+            userLocation.longitude,
+            shop.location.latitude,
+            shop.location.longitude
+          );
+          return { ...shop, distance };
+        });
+
+        // Filter by max distance if specified
+        if (maxDistance) {
+          shops = shops.filter(shop => (shop.distance ?? Infinity) <= maxDistance);
+        }
+
+        // Sort by distance
+        shops.sort((a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity));
+      }
 
       return shops;
     },
