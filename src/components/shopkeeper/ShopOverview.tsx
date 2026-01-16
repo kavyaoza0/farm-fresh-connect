@@ -25,6 +25,7 @@ import {
   Edit,
   CheckCircle2,
 } from 'lucide-react';
+import { ShopLocationSetup } from './ShopLocationSetup';
 
 interface ShopOverviewProps {
   shop: Shop;
@@ -231,29 +232,8 @@ export function ShopOverview({ shop, productsCount, ordersCount }: ShopOverviewP
         </CardContent>
       </Card>
 
-      {/* Address */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base flex items-center gap-2">
-            <MapPin className="w-4 h-4" />
-            Location
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            {shop.location.address ? (
-              <>
-                {shop.location.address}
-                {shop.location.city && `, ${shop.location.city}`}
-                {shop.location.state && `, ${shop.location.state}`}
-                {shop.location.pincode && ` - ${shop.location.pincode}`}
-              </>
-            ) : (
-              'No address set'
-            )}
-          </p>
-        </CardContent>
-      </Card>
+      {/* Location Setup */}
+      <ShopLocationSetup shop={shop} />
     </div>
   );
 }
