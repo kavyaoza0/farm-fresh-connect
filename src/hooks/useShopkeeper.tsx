@@ -429,6 +429,12 @@ export function useUpdateShop() {
         is_open?: boolean;
         opening_time?: string;
         closing_time?: string;
+        city?: string;
+        state?: string;
+        pincode?: string;
+        address?: string;
+        latitude?: number;
+        longitude?: number;
       };
     }) => {
       const { data, error } = await supabase

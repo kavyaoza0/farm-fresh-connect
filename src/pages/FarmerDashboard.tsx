@@ -1,13 +1,18 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Package, ShoppingCart, BarChart3 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Package, ShoppingCart, BarChart3, ArrowLeft } from 'lucide-react';
 import { ProduceOverview } from '@/components/farmer/ProduceOverview';
 import { ProduceManagement } from '@/components/farmer/ProduceManagement';
 import { BulkOrderManagement } from '@/components/farmer/BulkOrderManagement';
 import { useMyProduce, useBulkOrderRequests } from '@/hooks/useFarmer';
 import { Header } from '@/components/Header';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function FarmerDashboard() {
+  const navigate = useNavigate();
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('overview');
   const { data: produce, isLoading: produceLoading } = useMyProduce();
   const { data: bulkOrders, isLoading: ordersLoading } = useBulkOrderRequests();
@@ -16,7 +21,20 @@ export default function FarmerDashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header title="Farmer Dashboard" showLocation={false} showCart={false} />
+      <Header title={t.farmerDashboard} showLocation={false} showCart={false} />
+
+      {/* Back Button */}
+      <div className="container max-w-lg mx-auto px-4 py-2">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => navigate(-1)}
+          className="gap-1"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          {t.back}
+        </Button>
+      </div>
 
       <div className="p-4 -mt-2">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
