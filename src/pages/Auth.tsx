@@ -17,6 +17,9 @@ const nameSchema = z.string().min(2, 'Name must be at least 2 characters');
 const isPublicRole = (value: string | null): value is Exclude<UserRole, 'admin'> =>
   value === 'customer' || value === 'shopkeeper' || value === 'farmer';
 
+const isValidRole = (value: string | null): value is UserRole =>
+  value === 'customer' || value === 'shopkeeper' || value === 'farmer' || value === 'admin';
+
 export default function Auth() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
@@ -26,25 +29,51 @@ export default function Auth() {
   const [step, setStep] = useState<'credentials' | 'role'>('credentials');
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string; name?: string }>({});
+  const [isDashboardAccess, setIsDashboardAccess] = useState(false);
+  const [targetDashboard, setTargetDashboard] = useState<UserRole | null>(null);
 
-  const { signIn, signUp, user } = useAuth();
+  const { signIn, signUp, user, userRole } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
 
   useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const roleFromQuery = params.get('role');
+    const dashboardAccess = params.get('dashboard') === 'true';
+
+    // If user is logged in
     if (user) {
-      navigate('/');
+      // If trying to access a dashboard, check role and redirect
+      if (dashboardAccess && isValidRole(roleFromQuery)) {
+        if (userRole === roleFromQuery) {
+          navigate(`/dashboard/${roleFromQuery}`);
+        } else {
+          toast({
+            variant: 'destructive',
+            title: 'Access Denied',
+            description: `You need ${roleFromQuery} role to access this dashboard.`,
+          });
+          navigate('/');
+        }
+      } else {
+        navigate('/');
+      }
       return;
     }
 
-    // If user picked a role on the landing page, preselect it for sign up
-    const roleFromQuery = new URLSearchParams(location.search).get('role');
-    if (isPublicRole(roleFromQuery)) {
+    // Handle dashboard access - show sign in mode only (no role selection)
+    if (dashboardAccess && isValidRole(roleFromQuery)) {
+      setIsDashboardAccess(true);
+      setTargetDashboard(roleFromQuery);
+      setIsSignUp(false); // Force sign-in mode for dashboard access
+      setSelectedRole(roleFromQuery);
+    } else if (isPublicRole(roleFromQuery)) {
+      // Regular signup with role preselection
       setSelectedRole(roleFromQuery);
       setIsSignUp(true);
     }
-  }, [user, navigate, location.search]);
+  }, [user, userRole, navigate, location.search, toast]);
 
   const validateForm = () => {
     const newErrors: { email?: string; password?: string; name?: string } = {};
@@ -101,6 +130,7 @@ export default function Auth() {
           : error.message,
       });
     }
+    // Note: Redirect is handled by the useEffect when user state changes
   };
 
   const handleRoleSelect = async (role: UserRole) => {
@@ -143,7 +173,9 @@ export default function Auth() {
           </div>
         </div>
         <p className="text-sm opacity-80">
-          {isSignUp ? 'Create your account' : 'Welcome back!'}
+          {isDashboardAccess 
+            ? `Sign in to access ${targetDashboard} dashboard` 
+            : isSignUp ? 'Create your account' : 'Welcome back!'}
         </p>
       </div>
 
@@ -152,10 +184,12 @@ export default function Auth() {
         {step === 'credentials' ? (
           <form onSubmit={handleCredentialsSubmit} className="space-y-4">
             <h2 className="text-xl font-semibold text-foreground mb-6">
-              {isSignUp ? 'Create Account' : 'Sign In'}
+              {isDashboardAccess 
+                ? `${targetDashboard?.charAt(0).toUpperCase()}${targetDashboard?.slice(1)} Sign In`
+                : isSignUp ? 'Create Account' : 'Sign In'}
             </h2>
 
-            {isSignUp && (
+            {isSignUp && !isDashboardAccess && (
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name</Label>
                 <div className="relative">
@@ -218,22 +252,36 @@ export default function Auth() {
               className="w-full mt-6"
               disabled={isLoading}
             >
-              {isLoading ? 'Please wait...' : isSignUp ? 'Continue' : 'Sign In'}
+              {isLoading ? 'Please wait...' : isDashboardAccess ? 'Sign In to Dashboard' : isSignUp ? 'Continue' : 'Sign In'}
             </Button>
 
-            <p className="text-center text-sm text-muted-foreground mt-6">
-              {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
-              <button
-                type="button"
-                onClick={() => {
-                  setIsSignUp(!isSignUp);
-                  setErrors({});
-                }}
-                className="text-primary font-medium hover:underline"
-              >
-                {isSignUp ? 'Sign In' : 'Sign Up'}
-              </button>
-            </p>
+            {!isDashboardAccess && (
+              <p className="text-center text-sm text-muted-foreground mt-6">
+                {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsSignUp(!isSignUp);
+                    setErrors({});
+                  }}
+                  className="text-primary font-medium hover:underline"
+                >
+                  {isSignUp ? 'Sign In' : 'Sign Up'}
+                </button>
+              </p>
+            )}
+
+            {isDashboardAccess && (
+              <p className="text-center text-sm text-muted-foreground mt-6">
+                <button
+                  type="button"
+                  onClick={() => navigate('/')}
+                  className="text-primary font-medium hover:underline"
+                >
+                  ← Back to Home
+                </button>
+              </p>
+            )}
           </form>
         ) : (
           <div className="space-y-4">
