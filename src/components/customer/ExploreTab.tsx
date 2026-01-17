@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { SearchBar } from '@/components/SearchBar';
 import { ShopCard } from '@/components/ShopCard';
 import { ShopMap } from '@/components/ShopMap';
+import { Button } from '@/components/ui/button';
 import { useShops, ShopWithDistance } from '@/hooks/useShops';
 import { useLocation } from '@/context/LocationContext';
 import { useLanguage } from '@/context/LanguageContext';
-import { Apple, Carrot, Leaf, Sparkles, Loader2, Map, List } from 'lucide-react';
+import { Apple, Carrot, Leaf, Sparkles, Loader2, Map, List, MapPin } from 'lucide-react';
 import { Shop } from '@/types';
 
 const categories = [
@@ -24,22 +25,52 @@ export const ExploreTab = ({ onShopSelect }: ExploreTabProps) => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
 
-  const { userLocation, isLocationSet } = useLocation();
+  const { userLocation, isLocationSet, setShowLocationSelector } = useLocation();
   const { data: shops = [], isLoading, error } = useShops();
   const { t } = useLanguage();
 
   const filteredShops = shops.filter(shop => {
     const matchesSearch = shop.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       shop.location.city.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     if (selectedCategory === 'all') return matchesSearch;
-    
+
     // Filter by category based on shop products
     return matchesSearch && shop.products?.some(p => p.product.category === selectedCategory);
   });
 
   return (
     <div className="space-y-4">
+      {/* Location */}
+      {!isLocationSet ? (
+        <button
+          type="button"
+          className="w-full bg-muted rounded-xl p-4 flex items-center justify-between text-left hover:bg-muted/80 transition-colors"
+          onClick={() => setShowLocationSelector(true)}
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <MapPin className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <p className="font-medium text-foreground">{t.setYourLocation}</p>
+              <p className="text-sm text-muted-foreground">{t.findShopsNearYou}</p>
+            </div>
+          </div>
+          <Button size="sm" variant="default">{t.setLocation}</Button>
+        </button>
+      ) : (
+        <div className="flex justify-end">
+          <button
+            type="button"
+            className="text-sm text-primary font-medium"
+            onClick={() => setShowLocationSelector(true)}
+          >
+            {t.changeLocation}
+          </button>
+        </div>
+      )}
+
       {/* Search & View Toggle */}
       <div className="flex gap-2">
         <SearchBar
