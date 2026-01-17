@@ -42,10 +42,18 @@ export default function Auth() {
     const roleFromQuery = params.get('role');
     const dashboardAccess = params.get('dashboard') === 'true';
 
-    // If user is logged in
-    if (user) {
-      // If trying to access a dashboard, check role and redirect
-      if (dashboardAccess && isValidRole(roleFromQuery)) {
+    // Dashboard flow (role fixed)
+    if (dashboardAccess && isValidRole(roleFromQuery)) {
+      setIsDashboardAccess(true);
+      setTargetDashboard(roleFromQuery);
+      setSelectedRole(roleFromQuery);
+      setStep('credentials');
+      setErrors({});
+
+      // If already logged in, wait for role to load then route accordingly
+      if (user) {
+        if (!userRole) return;
+
         if (userRole === roleFromQuery) {
           navigate(`/dashboard/${roleFromQuery}`);
         } else {
@@ -56,22 +64,28 @@ export default function Auth() {
           });
           navigate('/');
         }
-      } else {
-        navigate('/');
       }
+
+      // Start in sign-in mode (signup toggle allowed for non-admin dashboards)
+      setIsSignUp(false);
       return;
     }
 
-    // Handle dashboard access - show sign in mode only (no role selection)
-    if (dashboardAccess && isValidRole(roleFromQuery)) {
-      setIsDashboardAccess(true);
-      setTargetDashboard(roleFromQuery);
-      setIsSignUp(false); // Force sign-in mode for dashboard access
-      setSelectedRole(roleFromQuery);
-    } else if (isPublicRole(roleFromQuery)) {
-      // Regular signup with role preselection
+    // Not a dashboard flow
+    setIsDashboardAccess(false);
+    setTargetDashboard(null);
+
+    if (user) {
+      navigate('/');
+      return;
+    }
+
+    // Regular signup with role preselection (public roles only)
+    if (isPublicRole(roleFromQuery)) {
       setSelectedRole(roleFromQuery);
       setIsSignUp(true);
+      setStep('credentials');
+      setErrors({});
     }
   }, [user, userRole, navigate, location.search, toast]);
 
@@ -134,9 +148,19 @@ export default function Auth() {
   };
 
   const handleRoleSelect = async (role: UserRole) => {
+    // Security: admin accounts should not be self-created from the UI
+    if (role === 'admin') {
+      toast({
+        variant: 'destructive',
+        title: 'Admin signup disabled',
+        description: 'Admin accounts are created by invitation only.',
+      });
+      return;
+    }
+
     setSelectedRole(role);
     setIsLoading(true);
-    
+
     const { error } = await signUp(email, password, name, role);
     setIsLoading(false);
 
@@ -189,7 +213,7 @@ export default function Auth() {
                 : isSignUp ? 'Create Account' : 'Sign In'}
             </h2>
 
-            {isSignUp && !isDashboardAccess && (
+            {isSignUp && targetDashboard !== 'admin' && (
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name</Label>
                 <div className="relative">
@@ -206,6 +230,12 @@ export default function Auth() {
                 {errors.name && (
                   <p className="text-sm text-destructive">{errors.name}</p>
                 )}
+              </div>
+            )}
+
+            {isDashboardAccess && targetDashboard === 'admin' && (
+              <div className="rounded-xl border bg-muted p-3 text-sm text-muted-foreground">
+                Admin accounts can’t be created here. Please sign in with an existing admin account.
               </div>
             )}
 
@@ -255,7 +285,7 @@ export default function Auth() {
               {isLoading ? 'Please wait...' : isDashboardAccess ? 'Sign In to Dashboard' : isSignUp ? 'Continue' : 'Sign In'}
             </Button>
 
-            {!isDashboardAccess && (
+            {targetDashboard !== 'admin' && (
               <p className="text-center text-sm text-muted-foreground mt-6">
                 {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
                 <button
@@ -263,6 +293,7 @@ export default function Auth() {
                   onClick={() => {
                     setIsSignUp(!isSignUp);
                     setErrors({});
+                    setStep('credentials');
                   }}
                   className="text-primary font-medium hover:underline"
                 >
