@@ -2,18 +2,19 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { OTPInput } from './OTPInput';
-import { ArrowLeft, Mail, RefreshCw, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, RefreshCw, CheckCircle2, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 interface OTPVerificationProps {
-  email: string;
+  identifier: string;
+  type: 'email' | 'phone';
   onVerified: () => void;
   onBack: () => void;
   isSignUp?: boolean;
 }
 
-export const OTPVerification = ({ email, onVerified, onBack, isSignUp = false }: OTPVerificationProps) => {
+export const OTPVerification = ({ identifier, type, onVerified, onBack, isSignUp = false }: OTPVerificationProps) => {
   const [isVerifying, setIsVerifying] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const [countdown, setCountdown] = useState(60);
@@ -35,11 +36,11 @@ export const OTPVerification = ({ email, onVerified, onBack, isSignUp = false }:
     setIsVerifying(true);
     
     try {
-      const { error } = await supabase.auth.verifyOtp({
-        email,
-        token: otp,
-        type: isSignUp ? 'signup' : 'email',
-      });
+      const verifyOptions = type === 'email' 
+        ? { email: identifier, token: otp, type: isSignUp ? 'signup' as const : 'email' as const }
+        : { phone: identifier, token: otp, type: 'sms' as const };
+
+      const { error } = await supabase.auth.verifyOtp(verifyOptions);
 
       if (error) {
         toast({
@@ -54,7 +55,9 @@ export const OTPVerification = ({ email, onVerified, onBack, isSignUp = false }:
       setVerified(true);
       toast({
         title: 'Verified! ✓',
-        description: 'Your email has been verified successfully.',
+        description: type === 'email' 
+          ? 'Your email has been verified successfully.'
+          : 'Your phone has been verified successfully.',
       });
       
       setTimeout(() => {
@@ -74,12 +77,11 @@ export const OTPVerification = ({ email, onVerified, onBack, isSignUp = false }:
     setIsResending(true);
     
     try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          shouldCreateUser: false,
-        },
-      });
+      const resendOptions = type === 'email'
+        ? { email: identifier, options: { shouldCreateUser: false } }
+        : { phone: identifier, options: { shouldCreateUser: false } };
+
+      const { error } = await supabase.auth.signInWithOtp(resendOptions);
 
       if (error) {
         toast({
@@ -90,7 +92,9 @@ export const OTPVerification = ({ email, onVerified, onBack, isSignUp = false }:
       } else {
         toast({
           title: 'Code sent!',
-          description: 'A new verification code has been sent to your email.',
+          description: type === 'email'
+            ? 'A new verification code has been sent to your email.'
+            : 'A new verification code has been sent to your phone.',
         });
         setCountdown(60);
         setCanResend(false);
@@ -106,6 +110,8 @@ export const OTPVerification = ({ email, onVerified, onBack, isSignUp = false }:
     setIsResending(false);
   };
 
+  const Icon = type === 'email' ? Mail : Phone;
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -113,51 +119,89 @@ export const OTPVerification = ({ email, onVerified, onBack, isSignUp = false }:
       exit={{ opacity: 0, x: -20 }}
       className="space-y-6"
     >
-      <button
+      <motion.button
         onClick={onBack}
+        whileHover={{ x: -3 }}
+        whileTap={{ scale: 0.95 }}
         className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
         Back
-      </button>
+      </motion.button>
 
       <div className="text-center space-y-2">
         <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: "spring", duration: 0.5 }}
-          className="w-16 h-16 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center mb-4"
+          initial={{ scale: 0, rotate: -180 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ type: "spring", duration: 0.6 }}
+          className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mb-4 relative"
         >
           {verified ? (
             <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
               transition={{ type: "spring", duration: 0.5 }}
             >
-              <CheckCircle2 className="w-8 h-8 text-primary" />
+              <CheckCircle2 className="w-10 h-10 text-primary" />
             </motion.div>
           ) : (
-            <Mail className="w-8 h-8 text-primary" />
+            <>
+              <motion.div
+                animate={{ 
+                  scale: [1, 1.1, 1],
+                }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                <Icon className="w-10 h-10 text-primary" />
+              </motion.div>
+              
+              {/* Animated sparkles */}
+              <motion.div
+                className="absolute -top-1 -right-1"
+                animate={{ 
+                  rotate: [0, 360],
+                  scale: [0.8, 1.2, 0.8],
+                }}
+                transition={{ duration: 3, repeat: Infinity }}
+              >
+                <Sparkles className="w-5 h-5 text-accent" />
+              </motion.div>
+            </>
           )}
         </motion.div>
         
-        <h2 className="text-xl font-semibold text-foreground">
-          {verified ? 'Verified!' : 'Verify Your Email'}
-        </h2>
+        <motion.h2 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="text-xl font-semibold text-foreground"
+        >
+          {verified ? 'Verified!' : type === 'email' ? 'Verify Your Email' : 'Verify Your Phone'}
+        </motion.h2>
         
-        <p className="text-sm text-muted-foreground max-w-[28ch] mx-auto">
+        <motion.p 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="text-sm text-muted-foreground max-w-[28ch] mx-auto"
+        >
           {verified 
             ? 'Redirecting you now...'
-            : `We've sent a 6-digit code to ${email}`
+            : `We've sent a 6-digit code to ${identifier}`
           }
-        </p>
+        </motion.p>
       </div>
 
       {!verified && (
         <>
-          <div className="py-4">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="py-4"
+          >
             <OTPInput onComplete={handleVerify} disabled={isVerifying} />
-          </div>
+          </motion.div>
 
           {isVerifying && (
             <motion.div
@@ -171,30 +215,56 @@ export const OTPVerification = ({ email, onVerified, onBack, isSignUp = false }:
               >
                 <RefreshCw className="w-4 h-4" />
               </motion.div>
-              Verifying...
+              <motion.span
+                animate={{ opacity: [1, 0.5, 1] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+              >
+                Verifying...
+              </motion.span>
             </motion.div>
           )}
 
-          <div className="text-center">
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="text-center"
+          >
             <p className="text-sm text-muted-foreground mb-2">
               Didn't receive the code?
             </p>
             {canResend ? (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleResend}
-                disabled={isResending}
-                className="text-primary"
+              <motion.div
+                initial={{ scale: 0.9 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring" }}
               >
-                {isResending ? 'Sending...' : 'Resend Code'}
-              </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleResend}
+                  disabled={isResending}
+                  className="text-primary"
+                >
+                  {isResending ? 'Sending...' : 'Resend Code'}
+                </Button>
+              </motion.div>
             ) : (
-              <p className="text-sm text-muted-foreground">
-                Resend in <span className="font-semibold text-primary">{countdown}s</span>
-              </p>
+              <motion.p 
+                className="text-sm text-muted-foreground"
+                key={countdown}
+              >
+                Resend in{' '}
+                <motion.span 
+                  initial={{ scale: 1.3 }}
+                  animate={{ scale: 1 }}
+                  className="font-semibold text-primary inline-block"
+                >
+                  {countdown}s
+                </motion.span>
+              </motion.p>
             )}
-          </div>
+          </motion.div>
         </>
       )}
     </motion.div>
