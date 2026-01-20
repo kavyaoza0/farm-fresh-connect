@@ -6,8 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RoleSelector } from '@/components/RoleSelector';
 import { OTPVerification } from '@/components/auth/OTPVerification';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { UserRole } from '@/types';
-import { Leaf, Mail, Lock, User, Sparkles, Phone, ArrowLeft } from 'lucide-react';
+import { Leaf, Mail, Lock, User, Sparkles, Phone, ArrowLeft, Zap, Shield, Star } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { z } from 'zod';
@@ -26,21 +27,102 @@ const isValidRole = (value: string | null): value is UserRole =>
 
 type AuthStep = 'credentials' | 'otp' | 'role';
 type AuthMethod = 'password' | 'email-otp' | 'phone-otp';
+type IdentifierType = 'email' | 'phone';
 
-const FloatingOrb = ({ delay, size, position }: { delay: number; size: string; position: string }) => (
+// Enhanced floating orb with more motion
+const FloatingOrb = ({ delay, size, position, color = 'bg-primary-foreground/10' }: { 
+  delay: number; 
+  size: string; 
+  position: string;
+  color?: string;
+}) => (
   <motion.div
-    className={`absolute ${position} ${size} rounded-full bg-primary-foreground/10 blur-2xl`}
+    className={`absolute ${position} ${size} rounded-full ${color} blur-2xl`}
     animate={{
-      scale: [1, 1.3, 1],
-      opacity: [0.2, 0.4, 0.2],
+      scale: [1, 1.4, 1],
+      opacity: [0.2, 0.5, 0.2],
+      rotate: [0, 180, 360],
     }}
     transition={{
-      duration: 5,
+      duration: 6,
       delay,
       repeat: Infinity,
       ease: "easeInOut",
     }}
   />
+);
+
+// Animated wave component
+const WaveAnimation = () => (
+  <motion.div 
+    className="absolute bottom-0 left-0 right-0 h-32 overflow-hidden pointer-events-none"
+  >
+    <motion.svg
+      viewBox="0 0 1440 320"
+      className="absolute bottom-0 w-full h-full"
+      preserveAspectRatio="none"
+    >
+      <motion.path
+        fill="hsl(var(--background))"
+        fillOpacity="0.3"
+        d="M0,160L48,144C96,128,192,96,288,106.7C384,117,480,171,576,176C672,181,768,139,864,128C960,117,1056,139,1152,154.7C1248,171,1344,181,1392,186.7L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
+        animate={{
+          d: [
+            "M0,160L48,144C96,128,192,96,288,106.7C384,117,480,171,576,176C672,181,768,139,864,128C960,117,1056,139,1152,154.7C1248,171,1344,181,1392,186.7L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z",
+            "M0,192L48,176C96,160,192,128,288,133.3C384,139,480,181,576,186.7C672,192,768,160,864,144C960,128,1056,160,1152,170.7C1248,181,1344,171,1392,165.3L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z",
+          ]
+        }}
+        transition={{ duration: 4, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}
+      />
+    </motion.svg>
+    <motion.svg
+      viewBox="0 0 1440 320"
+      className="absolute bottom-0 w-full h-full"
+      preserveAspectRatio="none"
+    >
+      <motion.path
+        fill="hsl(var(--background))"
+        fillOpacity="0.6"
+        d="M0,256L48,234.7C96,213,192,171,288,165.3C384,160,480,192,576,197.3C672,203,768,181,864,165.3C960,149,1056,139,1152,154.7C1248,171,1344,213,1392,234.7L1440,256L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
+        animate={{
+          d: [
+            "M0,256L48,234.7C96,213,192,171,288,165.3C384,160,480,192,576,197.3C672,203,768,181,864,165.3C960,149,1056,139,1152,154.7C1248,171,1344,213,1392,234.7L1440,256L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z",
+            "M0,224L48,213.3C96,203,192,181,288,181.3C384,181,480,203,576,218.7C672,235,768,245,864,229.3C960,213,1056,171,1152,165.3C1248,160,1344,192,1392,208L1440,224L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z",
+          ]
+        }}
+        transition={{ duration: 3, repeat: Infinity, repeatType: "reverse", ease: "easeInOut", delay: 0.5 }}
+      />
+    </motion.svg>
+  </motion.div>
+);
+
+// Floating icons component
+const FloatingIcons = () => (
+  <>
+    {[Leaf, Zap, Shield, Star, Sparkles].map((Icon, i) => (
+      <motion.div
+        key={i}
+        className="absolute text-primary-foreground/20"
+        style={{
+          left: `${10 + i * 20}%`,
+          top: `${20 + (i % 3) * 25}%`,
+        }}
+        animate={{
+          y: [0, -15, 0],
+          rotate: [0, 10, -10, 0],
+          opacity: [0.2, 0.4, 0.2],
+        }}
+        transition={{
+          duration: 4 + i,
+          delay: i * 0.5,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
+      >
+        <Icon className="w-6 h-6" />
+      </motion.div>
+    ))}
+  </>
 );
 
 export default function Auth() {
@@ -56,8 +138,9 @@ export default function Auth() {
   const [isDashboardAccess, setIsDashboardAccess] = useState(false);
   const [targetDashboard, setTargetDashboard] = useState<UserRole | null>(null);
   const [authMethod, setAuthMethod] = useState<AuthMethod>('password');
+  const [identifierType, setIdentifierType] = useState<IdentifierType>('email');
 
-  const { signIn, signUp, user, userRole } = useAuth();
+  const { signIn, signUp: authSignUp, user, userRole } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
@@ -112,7 +195,7 @@ export default function Auth() {
   const validateForm = () => {
     const newErrors: { email?: string; password?: string; name?: string; phone?: string } = {};
     
-    if (authMethod === 'phone-otp') {
+    if (identifierType === 'phone') {
       const phoneResult = phoneSchema.safeParse(phone);
       if (!phoneResult.success) {
         newErrors.phone = phoneResult.error.errors[0].message;
@@ -147,13 +230,13 @@ export default function Auth() {
 
     if (!validateForm()) return;
 
-    if (authMethod === 'email-otp') {
-      await handleEmailOTP();
-      return;
-    }
-
-    if (authMethod === 'phone-otp') {
-      await handlePhoneOTP();
+    // Determine auth method based on identifier type for OTP
+    if (authMethod === 'email-otp' || authMethod === 'phone-otp') {
+      if (identifierType === 'phone') {
+        await handlePhoneOTP();
+      } else {
+        await handleEmailOTP();
+      }
       return;
     }
 
@@ -172,27 +255,20 @@ export default function Auth() {
     setIsLoading(true);
     
     try {
+      // Enable OTP for both signup and signin
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          shouldCreateUser: false,
+          shouldCreateUser: isSignUp, // Allow signup with OTP
         },
       });
 
       if (error) {
-        if (error.message.includes('user not found') || error.message.includes('not found')) {
-          toast({
-            variant: 'destructive',
-            title: 'Account not found',
-            description: 'No account exists with this email. Please sign up first.',
-          });
-        } else {
-          toast({
-            variant: 'destructive',
-            title: 'Error',
-            description: error.message,
-          });
-        }
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: error.message,
+        });
         setIsLoading(false);
         return;
       }
@@ -219,27 +295,20 @@ export default function Auth() {
     try {
       const formattedPhone = phone.startsWith('+') ? phone : `+${phone}`;
       
+      // Enable OTP for both signup and signin
       const { error } = await supabase.auth.signInWithOtp({
         phone: formattedPhone,
         options: {
-          shouldCreateUser: false,
+          shouldCreateUser: isSignUp, // Allow signup with OTP
         },
       });
 
       if (error) {
-        if (error.message.includes('user not found') || error.message.includes('not found')) {
-          toast({
-            variant: 'destructive',
-            title: 'Account not found',
-            description: 'No account exists with this phone. Please sign up first.',
-          });
-        } else {
-          toast({
-            variant: 'destructive',
-            title: 'Error',
-            description: error.message,
-          });
-        }
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: error.message,
+        });
         setIsLoading(false);
         return;
       }
@@ -289,7 +358,7 @@ export default function Auth() {
     setSelectedRole(role);
     setIsLoading(true);
 
-    const { error } = await signUp(email, password, name, role);
+    const { error } = await authSignUp(email, password, name, role);
     setIsLoading(false);
 
     if (error) {
@@ -313,13 +382,27 @@ export default function Auth() {
 
   const handleOTPVerified = () => {
     // Session will be set automatically by Supabase
+    // For new signups via OTP, they might need to set up their profile
   };
 
-  const getAuthMethodLabel = () => {
-    switch (authMethod) {
-      case 'email-otp': return 'Email OTP';
-      case 'phone-otp': return 'Phone OTP';
-      default: return 'Password';
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2,
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { type: "spring" as const, stiffness: 300, damping: 24 }
     }
   };
 
@@ -327,57 +410,79 @@ export default function Auth() {
     <div className="min-h-screen bg-background flex flex-col overflow-hidden">
       {/* Animated Header */}
       <motion.div 
-        initial={{ opacity: 0, y: -20 }}
+        initial={{ opacity: 0, y: -30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="gradient-hero text-primary-foreground p-6 pb-16 relative overflow-hidden"
+        transition={{ duration: 0.8, ease: "easeOut" }}
+        className="gradient-hero text-primary-foreground p-6 pb-20 relative overflow-hidden"
       >
         {/* Animated Background Elements */}
-        <FloatingOrb delay={0} size="w-48 h-48" position="-right-16 -top-16" />
-        <FloatingOrb delay={1} size="w-32 h-32" position="-left-12 bottom-0" />
-        <FloatingOrb delay={2} size="w-24 h-24" position="right-1/4 top-1/2" />
+        <FloatingOrb delay={0} size="w-56 h-56" position="-right-20 -top-20" />
+        <FloatingOrb delay={1} size="w-40 h-40" position="-left-16 bottom-0" color="bg-accent/20" />
+        <FloatingOrb delay={2} size="w-32 h-32" position="right-1/4 top-1/2" color="bg-secondary/15" />
+        <FloatingOrb delay={0.5} size="w-24 h-24" position="left-1/3 top-1/4" />
+        
+        {/* Floating Icons */}
+        <FloatingIcons />
         
         {/* Floating particles */}
-        {[...Array(5)].map((_, i) => (
+        {[...Array(12)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute w-2 h-2 rounded-full bg-primary-foreground/30"
+            className="absolute rounded-full bg-primary-foreground/30"
             style={{
-              left: `${20 + i * 15}%`,
-              top: `${30 + (i % 3) * 20}%`,
+              width: 4 + (i % 3) * 2,
+              height: 4 + (i % 3) * 2,
+              left: `${5 + i * 8}%`,
+              top: `${15 + (i % 4) * 20}%`,
             }}
             animate={{
-              y: [0, -20, 0],
-              opacity: [0.3, 0.7, 0.3],
+              y: [0, -25, 0],
+              x: [0, (i % 2 === 0 ? 10 : -10), 0],
+              opacity: [0.2, 0.6, 0.2],
+              scale: [1, 1.3, 1],
             }}
             transition={{
-              duration: 3 + i * 0.5,
-              delay: i * 0.2,
+              duration: 3 + i * 0.3,
+              delay: i * 0.15,
               repeat: Infinity,
+              ease: "easeInOut",
             }}
           />
         ))}
 
+        {/* Wave Animation */}
+        <WaveAnimation />
+
         <div className="relative z-10">
+          {/* Theme Toggle */}
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.5 }}
+            className="absolute right-0 top-0"
+          >
+            <ThemeToggle className="text-primary-foreground" />
+          </motion.div>
+
           <motion.div 
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
+            transition={{ duration: 0.6, delay: 0.2, type: "spring" }}
             className="flex items-center gap-3 mb-4"
           >
             <motion.div 
-              className="w-14 h-14 bg-primary-foreground/20 rounded-2xl flex items-center justify-center backdrop-blur-sm"
-              whileHover={{ rotate: [0, -5, 5, 0] }}
+              className="w-16 h-16 bg-primary-foreground/20 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-primary-foreground/10"
+              whileHover={{ rotate: [0, -10, 10, 0], scale: 1.05 }}
               transition={{ duration: 0.5 }}
             >
               <motion.div
                 animate={{ 
-                  rotate: [0, 10, -10, 0],
-                  scale: [1, 1.1, 1],
+                  rotate: [0, 15, -15, 0],
+                  scale: [1, 1.15, 1],
                 }}
-                transition={{ duration: 4, repeat: Infinity }}
+                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
               >
-                <Leaf className="w-8 h-8" />
+                <Leaf className="w-9 h-9" />
               </motion.div>
             </motion.div>
             <div>
@@ -385,7 +490,7 @@ export default function Auth() {
                 className="text-2xl font-bold"
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 }}
+                transition={{ delay: 0.4 }}
               >
                 Mandi Fresh
               </motion.h1>
@@ -393,7 +498,7 @@ export default function Auth() {
                 className="text-sm opacity-90"
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.4 }}
+                transition={{ delay: 0.5 }}
               >
                 मंडी फ्रेश
               </motion.p>
@@ -403,12 +508,12 @@ export default function Auth() {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
+            transition={{ duration: 0.5, delay: 0.6 }}
             className="flex items-center gap-2"
           >
             <motion.div
               animate={{ rotate: [0, 360] }}
-              transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+              transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
             >
               <Sparkles className="w-4 h-4 opacity-80" />
             </motion.div>
@@ -423,32 +528,41 @@ export default function Auth() {
 
       {/* Content */}
       <motion.div 
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-        className="flex-1 -mt-8 bg-background rounded-t-[2rem] p-6 shadow-elevated relative"
+        transition={{ duration: 0.6, delay: 0.3 }}
+        className="flex-1 -mt-10 bg-background rounded-t-[2.5rem] p-6 shadow-elevated relative"
       >
+        {/* Decorative top line */}
+        <motion.div 
+          className="absolute top-3 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-muted-foreground/20 rounded-full"
+          initial={{ width: 0 }}
+          animate={{ width: 48 }}
+          transition={{ delay: 0.5, duration: 0.3 }}
+        />
+
         <AnimatePresence mode="wait">
           {step === 'otp' ? (
             <OTPVerification
               key="otp"
-              identifier={authMethod === 'phone-otp' ? (phone.startsWith('+') ? phone : `+${phone}`) : email}
-              type={authMethod === 'phone-otp' ? 'phone' : 'email'}
+              identifier={identifierType === 'phone' ? (phone.startsWith('+') ? phone : `+${phone}`) : email}
+              type={identifierType}
               onVerified={handleOTPVerified}
               onBack={() => setStep('credentials')}
+              isSignUp={isSignUp}
             />
           ) : step === 'credentials' ? (
             <motion.form 
               key="credentials"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              exit={{ opacity: 0, x: -30 }}
               onSubmit={handleCredentialsSubmit} 
-              className="space-y-5"
+              className="space-y-5 mt-4"
             >
               <motion.h2 
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
+                variants={itemVariants}
                 className="text-xl font-semibold text-foreground"
               >
                 {isDashboardAccess 
@@ -456,39 +570,57 @@ export default function Auth() {
                   : isSignUp ? 'Create Account' : 'Sign In'}
               </motion.h2>
 
+              {/* Identifier Type Selector (Email/Phone) */}
+              <motion.div variants={itemVariants}>
+                <Label className="text-sm text-muted-foreground mb-2 block">Sign {isSignUp ? 'up' : 'in'} with</Label>
+                <div className="flex gap-2 p-1 bg-muted rounded-2xl">
+                  {(['email', 'phone'] as IdentifierType[]).map((type) => (
+                    <motion.button
+                      key={type}
+                      type="button"
+                      onClick={() => setIdentifierType(type)}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-all duration-300 flex items-center justify-center gap-2 ${
+                        identifierType === type 
+                          ? 'bg-background text-foreground shadow-md' 
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      {type === 'email' ? <Mail className="w-4 h-4" /> : <Phone className="w-4 h-4" />}
+                      {type === 'email' ? 'Email' : 'Phone'}
+                    </motion.button>
+                  ))}
+                </div>
+              </motion.div>
+
               {/* Auth Method Selector */}
-              {!isSignUp && targetDashboard !== 'admin' && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 }}
-                  className="flex gap-2 p-1 bg-muted rounded-xl"
-                >
-                  {(['password', 'email-otp', 'phone-otp'] as AuthMethod[]).map((method) => (
+              <motion.div variants={itemVariants}>
+                <Label className="text-sm text-muted-foreground mb-2 block">Authentication method</Label>
+                <div className="flex gap-2 p-1 bg-muted rounded-2xl">
+                  {(['password', identifierType === 'email' ? 'email-otp' : 'phone-otp'] as AuthMethod[]).map((method) => (
                     <motion.button
                       key={method}
                       type="button"
                       onClick={() => setAuthMethod(method)}
-                      whileTap={{ scale: 0.95 }}
-                      className={`flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-all duration-300 ${
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-all duration-300 flex items-center justify-center gap-2 ${
                         authMethod === method 
-                          ? 'bg-background text-foreground shadow-sm' 
+                          ? 'bg-background text-foreground shadow-md' 
                           : 'text-muted-foreground hover:text-foreground'
                       }`}
                     >
-                      {method === 'password' && 'Password'}
-                      {method === 'email-otp' && 'Email OTP'}
-                      {method === 'phone-otp' && 'Phone OTP'}
+                      {method === 'password' ? <Lock className="w-4 h-4" /> : <Zap className="w-4 h-4" />}
+                      {method === 'password' ? 'Password' : 'OTP'}
                     </motion.button>
                   ))}
-                </motion.div>
-              )}
+                </div>
+              </motion.div>
 
-              {isSignUp && targetDashboard !== 'admin' && authMethod === 'password' && (
+              {isSignUp && authMethod === 'password' && (
                 <motion.div 
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
+                  variants={itemVariants}
                   className="space-y-2"
                 >
                   <Label htmlFor="name">Full Name</Label>
@@ -496,22 +628,23 @@ export default function Auth() {
                     className="relative"
                     whileFocus={{ scale: 1.01 }}
                   >
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                     <Input
                       id="name"
                       type="text"
                       placeholder="Enter your name"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="pl-10 h-12"
+                      className="pl-12 h-14 rounded-xl text-base"
                     />
                   </motion.div>
                   {errors.name && (
                     <motion.p 
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
-                      className="text-sm text-destructive"
+                      className="text-sm text-destructive flex items-center gap-1"
                     >
+                      <span className="w-1 h-1 rounded-full bg-destructive" />
                       {errors.name}
                     </motion.p>
                   )}
@@ -520,68 +653,66 @@ export default function Auth() {
 
               {isDashboardAccess && targetDashboard === 'admin' && (
                 <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
+                  variants={itemVariants}
                   className="rounded-xl border bg-muted/50 p-4 text-sm text-muted-foreground"
                 >
                   <p>Admin accounts can't be created here. Please sign in with an existing admin account.</p>
                 </motion.div>
               )}
 
-              {/* Email/Phone Input based on auth method */}
-              {authMethod === 'phone-otp' ? (
+              {/* Email/Phone Input based on identifier type */}
+              {identifierType === 'phone' ? (
                 <motion.div 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  variants={itemVariants}
                   className="space-y-2"
                 >
                   <Label htmlFor="phone">Phone Number</Label>
                   <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                     <Input
                       id="phone"
                       type="tel"
                       placeholder="+91XXXXXXXXXX"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      className="pl-10 h-12"
+                      className="pl-12 h-14 rounded-xl text-base"
                     />
                   </div>
                   {errors.phone && (
                     <motion.p 
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
-                      className="text-sm text-destructive"
+                      className="text-sm text-destructive flex items-center gap-1"
                     >
+                      <span className="w-1 h-1 rounded-full bg-destructive" />
                       {errors.phone}
                     </motion.p>
                   )}
                 </motion.div>
               ) : (
                 <motion.div 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 }}
+                  variants={itemVariants}
                   className="space-y-2"
                 >
                   <Label htmlFor="email">Email</Label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                     <Input
                       id="email"
                       type="email"
                       placeholder="Enter your email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="pl-10 h-12"
+                      className="pl-12 h-14 rounded-xl text-base"
                     />
                   </div>
                   {errors.email && (
                     <motion.p 
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
-                      className="text-sm text-destructive"
+                      className="text-sm text-destructive flex items-center gap-1"
                     >
+                      <span className="w-1 h-1 rounded-full bg-destructive" />
                       {errors.email}
                     </motion.p>
                   )}
@@ -590,68 +721,91 @@ export default function Auth() {
 
               {authMethod === 'password' && (
                 <motion.div 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
+                  variants={itemVariants}
                   className="space-y-2"
                 >
                   <Label htmlFor="password">Password</Label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                     <Input
                       id="password"
                       type="password"
                       placeholder="Enter your password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="pl-10 h-12"
+                      className="pl-12 h-14 rounded-xl text-base"
                     />
                   </div>
                   {errors.password && (
                     <motion.p 
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
-                      className="text-sm text-destructive"
+                      className="text-sm text-destructive flex items-center gap-1"
                     >
+                      <span className="w-1 h-1 rounded-full bg-destructive" />
                       {errors.password}
                     </motion.p>
                   )}
                 </motion.div>
               )}
 
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-              >
+              <motion.div variants={itemVariants}>
                 <Button
                   type="submit"
                   variant="hero"
                   size="xl"
-                  className="w-full relative overflow-hidden group"
+                  className="w-full relative overflow-hidden group h-14 rounded-xl text-base"
                   disabled={isLoading}
                 >
+                  {/* Animated shimmer */}
                   <motion.span
-                    className="absolute inset-0 bg-gradient-to-r from-transparent via-primary-foreground/10 to-transparent"
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-primary-foreground/20 to-transparent"
                     animate={{ x: ['-100%', '100%'] }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                    transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
                   />
-                  <span className="relative">
+                  
+                  {/* Ripple effect on hover */}
+                  <motion.span
+                    className="absolute inset-0 bg-primary-foreground/10 opacity-0 group-hover:opacity-100"
+                    initial={{ scale: 0, borderRadius: '100%' }}
+                    whileHover={{ scale: 2, borderRadius: '0%' }}
+                    transition={{ duration: 0.5 }}
+                  />
+                  
+                  <span className="relative flex items-center justify-center gap-2">
                     {isLoading ? (
                       <motion.span
+                        className="flex items-center gap-2"
                         animate={{ opacity: [1, 0.5, 1] }}
                         transition={{ duration: 1.5, repeat: Infinity }}
                       >
+                        <motion.div 
+                          className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full"
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        />
                         Please wait...
                       </motion.span>
                     ) : authMethod !== 'password' ? (
-                      `Send ${authMethod === 'phone-otp' ? 'SMS' : 'Email'} Code`
+                      <>
+                        <Zap className="w-5 h-5" />
+                        Send {identifierType === 'phone' ? 'SMS' : 'Email'} Code
+                      </>
                     ) : isDashboardAccess ? (
-                      'Sign In to Dashboard'
+                      <>
+                        <Shield className="w-5 h-5" />
+                        Sign In to Dashboard
+                      </>
                     ) : isSignUp ? (
-                      'Continue'
+                      <>
+                        <Star className="w-5 h-5" />
+                        Continue
+                      </>
                     ) : (
-                      'Sign In'
+                      <>
+                        <ArrowLeft className="w-5 h-5 rotate-180" />
+                        Sign In
+                      </>
                     )}
                   </span>
                 </Button>
@@ -659,13 +813,11 @@ export default function Auth() {
 
               {targetDashboard !== 'admin' && (
                 <motion.p 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.4 }}
+                  variants={itemVariants}
                   className="text-center text-sm text-muted-foreground"
                 >
                   {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
-                  <button
+                  <motion.button
                     type="button"
                     onClick={() => {
                       setIsSignUp(!isSignUp);
@@ -673,42 +825,43 @@ export default function Auth() {
                       setErrors({});
                       setStep('credentials');
                     }}
-                    className="text-primary font-medium hover:underline"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="text-primary font-semibold hover:underline"
                   >
                     {isSignUp ? 'Sign In' : 'Sign Up'}
-                  </button>
+                  </motion.button>
                 </motion.p>
               )}
 
               {isDashboardAccess && (
                 <motion.p 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.5 }}
+                  variants={itemVariants}
                   className="text-center text-sm text-muted-foreground"
                 >
-                  <button
+                  <motion.button
                     type="button"
                     onClick={() => navigate('/')}
+                    whileHover={{ x: -3 }}
                     className="text-primary font-medium hover:underline inline-flex items-center gap-1"
                   >
                     <ArrowLeft className="w-3 h-3" />
                     Back to Home
-                  </button>
+                  </motion.button>
                 </motion.p>
               )}
             </motion.form>
           ) : (
             <motion.div 
               key="role"
-              initial={{ opacity: 0, x: 20 }}
+              initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="space-y-5"
+              exit={{ opacity: 0, x: -30 }}
+              className="space-y-5 mt-4"
             >
               <motion.button
                 onClick={() => setStep('credentials')}
-                whileHover={{ x: -3 }}
+                whileHover={{ x: -5 }}
                 whileTap={{ scale: 0.95 }}
                 className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
               >
@@ -735,8 +888,13 @@ export default function Auth() {
                 <motion.div 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="text-center text-sm text-muted-foreground mt-4"
+                  className="text-center text-sm text-muted-foreground mt-4 flex items-center justify-center gap-2"
                 >
+                  <motion.div 
+                    className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full"
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                  />
                   <motion.span
                     animate={{ opacity: [1, 0.5, 1] }}
                     transition={{ duration: 1.5, repeat: Infinity }}
