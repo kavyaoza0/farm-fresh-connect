@@ -1,12 +1,14 @@
 import { useLanguage } from '@/context/LanguageContext';
-import { Leaf, Store, Truck, ShieldCheck, Star, Users, Heart } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Leaf, Store, Truck, ShieldCheck, Star, Users, Heart, Zap, Award, Globe } from 'lucide-react';
+import { motion, useScroll, useTransform } from 'framer-motion';
+import { useRef } from 'react';
 import { HeroSection } from './HeroSection';
 import { Card3D, FloatingIcon3D, StaggerContainer, StaggerItem } from './Animated3DCards';
 import { ParallaxImageSection, VideoScrollSection, ScrollReveal3D } from './ParallaxImageSection';
 import farmVideo from '@/assets/farm-hero.mp4';
 import freshVegetablesImg from '@/assets/fresh-vegetables.jpg';
-import farmerHarvestImg from '@/assets/farmer-harvest.jpg';
+import farmJourneyImg from '@/assets/farm-journey.jpg';
+import farmerFamilyImg from '@/assets/farmer-family.jpg';
 import localShopImg from '@/assets/local-shop.jpg';
 
 interface HomeTabProps {
@@ -30,38 +32,77 @@ const FeatureCard = ({ icon: Icon, title, description, delay }: { icon: any; tit
   </Card3D>
 );
 
+const CountUpNumber = ({ value, label, delay }: { value: string; label: string; delay: number }) => (
+  <motion.div
+    className="text-center"
+    initial={{ opacity: 0, scale: 0, rotateZ: -90 }}
+    whileInView={{ opacity: 1, scale: 1, rotateZ: 0 }}
+    viewport={{ once: true }}
+    transition={{ type: "spring", stiffness: 150, delay }}
+  >
+    <motion.p
+      className="text-2xl font-bold text-primary"
+      whileHover={{ scale: 1.2, rotateY: 15 }}
+      transition={{ type: "spring" }}
+    >
+      {value}
+    </motion.p>
+    <p className="text-xs text-muted-foreground">{label}</p>
+  </motion.div>
+);
+
+const FloatingBadge3D = ({ text, icon: Icon, delay, className = '' }: { text: string; icon: any; delay: number; className?: string }) => (
+  <motion.div
+    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-medium ${className}`}
+    initial={{ opacity: 0, y: 20, rotateX: -30 }}
+    whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
+    viewport={{ once: true }}
+    transition={{ delay, type: "spring", stiffness: 200 }}
+    whileHover={{ scale: 1.1, rotateY: 10, boxShadow: "0 8px 25px -5px hsl(142 55% 35% / 0.3)" }}
+    style={{ transformStyle: "preserve-3d" }}
+  >
+    <Icon className="w-3.5 h-3.5" />
+    {text}
+  </motion.div>
+);
+
 export const HomeTab = ({ onExplore }: HomeTabProps) => {
   const { t } = useLanguage();
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start start", "end end"] });
+  const bgGradientOpacity = useTransform(scrollYProgress, [0, 0.5, 1], [0, 0.05, 0.1]);
 
   return (
-    <section className="space-y-8 pb-6 overflow-hidden">
+    <section ref={sectionRef} className="space-y-8 pb-6 overflow-hidden relative">
+      {/* Animated Background Gradient */}
+      <motion.div
+        className="fixed inset-0 pointer-events-none z-0"
+        style={{ opacity: bgGradientOpacity }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/20 via-transparent to-accent/10" />
+      </motion.div>
+
       {/* Video Hero with 3D Scroll */}
       <HeroSection onExplore={onExplore} />
 
+      {/* Floating Badges Row */}
+      <div className="flex flex-wrap gap-2 justify-center">
+        <FloatingBadge3D icon={Leaf} text="100% Organic" delay={0.3} />
+        <FloatingBadge3D icon={Zap} text="Same Day" delay={0.4} />
+        <FloatingBadge3D icon={Award} text="Verified" delay={0.5} />
+        <FloatingBadge3D icon={Globe} text="Local First" delay={0.6} />
+      </div>
+
       {/* 3D Stats Row */}
-      <StaggerContainer className="grid grid-cols-3 gap-3">
-        {[
-          { value: '500+', label: 'Products', icon: Star },
-          { value: '100+', label: 'Shops', icon: Store },
-          { value: '50+', label: 'Farmers', icon: Users },
-        ].map((stat) => (
-          <StaggerItem key={stat.label}>
-            <Card3D className="h-full">
-              <div className="text-center p-3 rounded-xl bg-card border border-border/50">
-                <motion.p
-                  className="text-xl font-bold text-primary"
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: "spring", stiffness: 200, delay: 0.8 }}
-                >
-                  {stat.value}
-                </motion.p>
-                <p className="text-xs text-muted-foreground">{stat.label}</p>
-              </div>
-            </Card3D>
-          </StaggerItem>
-        ))}
-      </StaggerContainer>
+      <ScrollReveal3D direction="up">
+        <Card3D>
+          <div className="grid grid-cols-3 gap-3 p-4 rounded-2xl bg-card border border-border/50 shadow-card">
+            <CountUpNumber value="500+" label="Products" delay={0.2} />
+            <CountUpNumber value="100+" label="Shops" delay={0.4} />
+            <CountUpNumber value="50+" label="Farmers" delay={0.6} />
+          </div>
+        </Card3D>
+      </ScrollReveal3D>
 
       {/* Parallax Image — Fresh Produce */}
       <ScrollReveal3D direction="left">
@@ -86,11 +127,22 @@ export const HomeTab = ({ onExplore }: HomeTabProps) => {
         <FeatureCard icon={Store} title="Local Shops Network" description="Connect with trusted local vegetable shops in your neighborhood." delay={0.1} />
       </div>
 
-      {/* Video Scroll Section — Farm Journey */}
+      {/* Video Scroll Section — Farm Journey (NEW IMAGE) */}
+      <ScrollReveal3D direction="up">
+        <ParallaxImageSection
+          imageSrc={farmJourneyImg}
+          alt="Farm to table journey with fresh produce crate"
+          title="From Farm to You"
+          subtitle="Watch the journey of freshness from field to your kitchen"
+          direction="right"
+        />
+      </ScrollReveal3D>
+
+      {/* Video Scroll Section */}
       <VideoScrollSection
         videoSrc={farmVideo}
-        title="From Farm to You"
-        subtitle="Watch the journey of freshness from field to your kitchen"
+        title="Experience the Harvest"
+        subtitle="See how our farmers grow the freshest produce every day"
       />
 
       {/* More Feature Cards */}
@@ -99,16 +151,34 @@ export const HomeTab = ({ onExplore }: HomeTabProps) => {
         <FeatureCard icon={ShieldCheck} title="Quality Assured" description="Every product is verified for freshness and quality standards." delay={0.1} />
       </div>
 
-      {/* Parallax Image — Farmer at Work */}
+      {/* Parallax Image — Supporting Farmers (NEW IMAGE) */}
       <ScrollReveal3D direction="right">
         <ParallaxImageSection
-          imageSrc={farmerHarvestImg}
-          alt="Farmer harvesting fresh produce"
+          imageSrc={farmerFamilyImg}
+          alt="Indian farmers proudly holding fresh produce"
           title="Supporting Local Farmers"
           subtitle="Every purchase empowers farmers and their families"
           direction="right"
         />
       </ScrollReveal3D>
+
+      {/* Animated Divider */}
+      <motion.div
+        className="flex items-center gap-3 px-4"
+        initial={{ opacity: 0, scaleX: 0 }}
+        whileInView={{ opacity: 1, scaleX: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.8 }}
+      >
+        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+        >
+          <Leaf className="w-4 h-4 text-primary/40" />
+        </motion.div>
+        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+      </motion.div>
 
       {/* Testimonial-style 3D card */}
       <ScrollReveal3D direction="up">
@@ -187,6 +257,45 @@ export const HomeTab = ({ onExplore }: HomeTabProps) => {
             </StaggerContainer>
           </div>
         </Card3D>
+      </ScrollReveal3D>
+
+      {/* CTA Section */}
+      <ScrollReveal3D direction="up">
+        <motion.div
+          className="rounded-2xl gradient-hero p-6 text-center"
+          whileHover={{ scale: 1.02, rotateX: -2 }}
+          transition={{ type: "spring", stiffness: 300 }}
+          style={{ transformStyle: "preserve-3d", perspective: 800 }}
+        >
+          <motion.h3
+            className="text-lg font-bold text-primary-foreground mb-2"
+            initial={{ opacity: 0, z: -30 }}
+            whileInView={{ opacity: 1, z: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2, type: "spring" }}
+            style={{ transformStyle: "preserve-3d" }}
+          >
+            Ready to go fresh?
+          </motion.h3>
+          <motion.p
+            className="text-sm text-primary-foreground/80 mb-4"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.3 }}
+          >
+            Start exploring local shops and farms near you
+          </motion.p>
+          <motion.button
+            onClick={onExplore}
+            className="px-6 py-2.5 rounded-xl bg-background text-primary font-semibold text-sm shadow-elevated"
+            whileHover={{ scale: 1.08, rotateY: 5 }}
+            whileTap={{ scale: 0.95 }}
+            style={{ transformStyle: "preserve-3d" }}
+          >
+            Explore Now →
+          </motion.button>
+        </motion.div>
       </ScrollReveal3D>
     </section>
   );
