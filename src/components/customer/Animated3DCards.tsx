@@ -5,16 +5,15 @@ interface Card3DProps {
   children: ReactNode;
   className?: string;
   delay?: number;
-  intensity?: number;
 }
 
-export const Card3D = ({ children, className = '', delay = 0, intensity = 4 }: Card3DProps) => {
+export const Card3D = ({ children, className = '', delay = 0 }: Card3DProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const x = useMotionValue(0);
   const y = useMotionValue(0);
 
-  const rotateX = useSpring(useTransform(y, [-0.5, 0.5], [intensity, -intensity]), { stiffness: 200, damping: 30 });
-  const rotateY = useSpring(useTransform(x, [-0.5, 0.5], [-intensity, intensity]), { stiffness: 200, damping: 30 });
+  const rotateX = useSpring(useTransform(y, [-0.5, 0.5], [8, -8]), { stiffness: 300, damping: 30 });
+  const rotateY = useSpring(useTransform(x, [-0.5, 0.5], [-8, 8]), { stiffness: 300, damping: 30 });
 
   const handleMouse = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!ref.current) return;
@@ -31,26 +30,34 @@ export const Card3D = ({ children, className = '', delay = 0, intensity = 4 }: C
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 24 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay, ease: [0.25, 0.46, 0.45, 0.94] }}
+      initial={{ opacity: 0, y: 40, rotateX: -10 }}
+      animate={{ opacity: 1, y: 0, rotateX: 0 }}
+      transition={{ duration: 0.7, delay, type: "spring" }}
       onMouseMove={handleMouse}
       onMouseLeave={handleLeave}
-      style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
-      className={className}
+      style={{ rotateX, rotateY, transformStyle: "preserve-3d", perspective: 800 }}
+      className={`cursor-pointer ${className}`}
     >
-      {children}
+      <div style={{ transform: "translateZ(20px)", transformStyle: "preserve-3d" }}>
+        {children}
+      </div>
     </motion.div>
   );
 };
 
 export const FloatingIcon3D = ({ children, delay = 0 }: { children: ReactNode; delay?: number }) => (
   <motion.div
-    initial={{ opacity: 0, scale: 0.8 }}
-    animate={{ opacity: 1, scale: 1 }}
-    transition={{ duration: 0.4, delay, ease: "easeOut" }}
-    whileHover={{ scale: 1.08, transition: { duration: 0.2 } }}
-    className="w-11 h-11 rounded-xl bg-primary/8 flex items-center justify-center shrink-0"
+    initial={{ opacity: 0, scale: 0, rotateY: -90 }}
+    animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+    transition={{ duration: 0.8, delay, type: "spring", stiffness: 200 }}
+    whileHover={{
+      rotateY: 15,
+      rotateX: -10,
+      scale: 1.15,
+      transition: { duration: 0.3 },
+    }}
+    style={{ transformStyle: "preserve-3d" }}
+    className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0"
   >
     {children}
   </motion.div>
@@ -62,7 +69,7 @@ export const StaggerContainer = ({ children, className = '' }: { children: React
     animate="visible"
     variants={{
       hidden: {},
-      visible: { transition: { staggerChildren: 0.06 } },
+      visible: { transition: { staggerChildren: 0.1 } },
     }}
     className={className}
   >
@@ -73,21 +80,9 @@ export const StaggerContainer = ({ children, className = '' }: { children: React
 export const StaggerItem = ({ children, className = '' }: { children: ReactNode; className?: string }) => (
   <motion.div
     variants={{
-      hidden: { opacity: 0, y: 16 },
-      visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
+      hidden: { opacity: 0, y: 30, rotateX: -15 },
+      visible: { opacity: 1, y: 0, rotateX: 0, transition: { duration: 0.6, type: "spring" } },
     }}
-    className={className}
-  >
-    {children}
-  </motion.div>
-);
-
-export const FadeInView = ({ children, className = '', delay = 0 }: { children: ReactNode; className?: string; delay?: number }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true, margin: "-40px" }}
-    transition={{ duration: 0.5, delay, ease: [0.25, 0.46, 0.45, 0.94] }}
     className={className}
   >
     {children}
