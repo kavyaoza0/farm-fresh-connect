@@ -3,8 +3,8 @@ import { Leaf, Store, Truck, ShieldCheck, Star, Users } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { HeroSection } from './HeroSection';
 import { Card3D, FloatingIcon3D, StaggerContainer, StaggerItem } from './Animated3DCards';
-import { VideoScrollSection, ScrollReveal3D } from './ParallaxImageSection';
-import farmVideo from '@/assets/farm-hero.mp4';
+import { ParallaxImageSection, ScrollReveal3D } from './ParallaxImageSection';
+import farmJourneyImg from '@/assets/farm-journey.jpg';
 
 interface HomeTabProps {
   onExplore: () => void;
@@ -70,12 +70,16 @@ export const HomeTab = ({ onExplore }: HomeTabProps) => {
         <FeatureCard icon={ShieldCheck} title="Quality Assured" description="Every product is verified for freshness and quality standards." delay={0.1} />
       </div>
 
-      {/* Video Section */}
-      <VideoScrollSection
-        videoSrc={farmVideo}
-        title="From Farm to You"
-        subtitle="Watch the journey of freshness from field to your kitchen"
-      />
+      {/* Farm Journey Section */}
+      <ScrollReveal3D direction="left">
+        <ParallaxImageSection
+          imageSrc={farmJourneyImg}
+          alt="Farmer carrying fresh produce at golden hour"
+          title="From Farm to You"
+          subtitle="The journey of freshness from field to your kitchen"
+          direction="left"
+        />
+      </ScrollReveal3D>
 
       {/* How It Works */}
       <ScrollReveal3D direction="up">
