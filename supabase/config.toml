@@ -1,1 +1,4 @@
 project_id = "fbtkzxagnaehblifndfc"
+
+[functions.twilio-otp]
+verify_jwt = false

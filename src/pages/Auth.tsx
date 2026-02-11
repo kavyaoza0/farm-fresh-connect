@@ -255,19 +255,15 @@ export default function Auth() {
     setIsLoading(true);
     
     try {
-      // Enable OTP for both signup and signin
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          shouldCreateUser: isSignUp, // Allow signup with OTP
-        },
+      const response = await supabase.functions.invoke('twilio-otp', {
+        body: { action: 'send', to: email, channel: 'email' },
       });
 
-      if (error) {
+      if (response.error || !response.data?.success) {
         toast({
           variant: 'destructive',
           title: 'Error',
-          description: error.message,
+          description: response.data?.error || 'Failed to send verification code.',
         });
         setIsLoading(false);
         return;
@@ -295,19 +291,15 @@ export default function Auth() {
     try {
       const formattedPhone = phone.startsWith('+') ? phone : `+${phone}`;
       
-      // Enable OTP for both signup and signin
-      const { error } = await supabase.auth.signInWithOtp({
-        phone: formattedPhone,
-        options: {
-          shouldCreateUser: isSignUp, // Allow signup with OTP
-        },
+      const response = await supabase.functions.invoke('twilio-otp', {
+        body: { action: 'send', to: formattedPhone, channel: 'sms' },
       });
 
-      if (error) {
+      if (response.error || !response.data?.success) {
         toast({
           variant: 'destructive',
           title: 'Error',
-          description: error.message,
+          description: response.data?.error || 'Failed to send verification code.',
         });
         setIsLoading(false);
         return;

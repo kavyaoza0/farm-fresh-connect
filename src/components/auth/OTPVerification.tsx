@@ -58,17 +58,15 @@ export const OTPVerification = ({ identifier, type, onVerified, onBack, isSignUp
     setIsVerifying(true);
     
     try {
-      const verifyOptions = type === 'email' 
-        ? { email: identifier, token: otp, type: isSignUp ? 'signup' as const : 'email' as const }
-        : { phone: identifier, token: otp, type: 'sms' as const };
+      const response = await supabase.functions.invoke('twilio-otp', {
+        body: { action: 'verify', to: identifier, code: otp },
+      });
 
-      const { error } = await supabase.auth.verifyOtp(verifyOptions);
-
-      if (error) {
+      if (response.error || !response.data?.success) {
         toast({
           variant: 'destructive',
           title: 'Verification failed',
-          description: error.message,
+          description: response.data?.error || 'Invalid verification code.',
         });
         setIsVerifying(false);
         return;
@@ -99,17 +97,17 @@ export const OTPVerification = ({ identifier, type, onVerified, onBack, isSignUp
     setIsResending(true);
     
     try {
-      const resendOptions = type === 'email'
-        ? { email: identifier, options: { shouldCreateUser: isSignUp } }
-        : { phone: identifier, options: { shouldCreateUser: isSignUp } };
+      const channel = type === 'email' ? 'email' : 'sms';
+      
+      const response = await supabase.functions.invoke('twilio-otp', {
+        body: { action: 'send', to: identifier, channel },
+      });
 
-      const { error } = await supabase.auth.signInWithOtp(resendOptions);
-
-      if (error) {
+      if (response.error || !response.data?.success) {
         toast({
           variant: 'destructive',
           title: 'Failed to resend',
-          description: error.message,
+          description: response.data?.error || 'Failed to resend code.',
         });
       } else {
         toast({
