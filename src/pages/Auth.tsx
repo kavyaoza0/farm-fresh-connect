@@ -17,7 +17,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 const emailSchema = z.string().email('Please enter a valid email address');
 const passwordSchema = z.string().min(6, 'Password must be at least 6 characters');
 const nameSchema = z.string().min(2, 'Name must be at least 2 characters');
-const phoneSchema = z.string().regex(/^\+?[1-9]\d{9,14}$/, 'Please enter a valid phone number (e.g., +91XXXXXXXXXX)');
+const phoneSchema = z.string().regex(/^\d{10}$/, 'Please enter a valid 10-digit phone number');
 
 const isPublicRole = (value: string | null): value is Exclude<UserRole, 'admin'> =>
   value === 'customer' || value === 'shopkeeper' || value === 'farmer';
@@ -289,7 +289,7 @@ export default function Auth() {
     setIsLoading(true);
     
     try {
-      const formattedPhone = phone.startsWith('+') ? phone : `+${phone}`;
+      const formattedPhone = phone.startsWith('+') ? phone : `+91${phone}`;
       
       const response = await supabase.functions.invoke('twilio-otp', {
         body: { action: 'send', to: formattedPhone, channel: 'sms' },
@@ -537,7 +537,7 @@ export default function Auth() {
           {step === 'otp' ? (
             <OTPVerification
               key="otp"
-              identifier={identifierType === 'phone' ? (phone.startsWith('+') ? phone : `+${phone}`) : email}
+              identifier={identifierType === 'phone' ? (phone.startsWith('+') ? phone : `+91${phone}`) : email}
               type={identifierType}
               onVerified={handleOTPVerified}
               onBack={() => setStep('credentials')}
@@ -661,13 +661,18 @@ export default function Auth() {
                   <Label htmlFor="phone">Phone Number</Label>
                   <div className="relative">
                     <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    <span className="absolute left-12 top-1/2 -translate-y-1/2 text-base text-muted-foreground select-none">+91</span>
                     <Input
                       id="phone"
                       type="tel"
-                      placeholder="+91XXXXXXXXXX"
+                      placeholder="XXXXXXXXXX"
                       value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      className="pl-12 h-14 rounded-xl text-base"
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^\d]/g, '');
+                        setPhone(val);
+                      }}
+                      maxLength={10}
+                      className="pl-[4.5rem] h-14 rounded-xl text-base"
                     />
                   </div>
                   {errors.phone && (
