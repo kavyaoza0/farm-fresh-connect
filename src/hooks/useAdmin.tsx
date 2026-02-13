@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 
@@ -128,6 +128,25 @@ export function useAllBulkOrderRequests() {
   });
 }
 
+// Admin: verify/unverify a shop
+export function useVerifyShop() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ shopId, verified }: { shopId: string; verified: boolean }) => {
+      const { error } = await supabase
+        .from('shops')
+        .update({ is_verified: verified })
+        .eq('id', shopId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-all-shops'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+    },
+  });
+}
+
 // Admin statistics summary
 export function useAdminStats() {
   const { userRole } = useAuth();
@@ -135,7 +154,6 @@ export function useAdminStats() {
   return useQuery({
     queryKey: ['admin-stats'],
     queryFn: async () => {
-      // Fetch counts in parallel
       const [
         profilesResult,
         shopsResult,
@@ -155,7 +173,6 @@ export function useAdminStats() {
       const shopkeeperCount = roles.filter(r => r.role === 'shopkeeper').length;
       const farmerCount = roles.filter(r => r.role === 'farmer').length;
 
-      // Fetch pending items
       const [pendingShopsResult, pendingOrdersResult] = await Promise.all([
         supabase.from('shops').select('id', { count: 'exact', head: true }).eq('is_verified', false),
         supabase.from('orders').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
